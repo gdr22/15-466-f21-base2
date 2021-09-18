@@ -30,12 +30,21 @@ struct PlayMode : Mode {
 	//game state:
 	float score;
 	std::vector<Scene::Transform*> blocks;
+	std::vector<float> angles;
 	const uint32_t num_tiles = 8;
 	const uint32_t len_tiles = 8;
-	const float rotation_speed = 0.1f;
+	const float rotation_speed = 10;
 	float block_speed = 0.1f;
 	const float gravity = -0.1f;
 	float cat_speed;
+	
+	//cat transforms
+	Scene::Transform* cat = nullptr;
+	Scene::Transform* catpeet0 = nullptr;
+	Scene::Transform* catpeet1 = nullptr;
+	Scene::Transform* catpeet2 = nullptr;
+	Scene::Transform* catpeet3 = nullptr;
+	Scene::Transform* cattail = nullptr;
 
 	//hexapod leg to wobble:
 	Scene::Transform *hip = nullptr;

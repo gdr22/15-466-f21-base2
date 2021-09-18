@@ -14,13 +14,13 @@
 
 GLuint catblob_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > catblob_meshes(LoadTagDefault, []() -> MeshBuffer const * {
-	MeshBuffer const *ret = new MeshBuffer(data_path("catblob.pnct"));
+	MeshBuffer const *ret = new MeshBuffer(data_path("CatMesh.pnct"));
 	catblob_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
 	return ret;
 });
 
 Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
-	return new Scene(data_path("catblob.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
+	return new Scene(data_path("Cat.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = catblob_meshes->lookup(mesh_name);
 
 		scene.drawables.emplace_back(transform);
@@ -36,11 +36,11 @@ Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
 	});
 });
 
-PlayMode::PlayMode() : scene(*hexapod_scene) {
+PlayMode::PlayMode() : scene(*catblob_scene) {
 	//init game states
 	score = 0;
-	time_acc = 0.0f;
 	//get pointers to leg for convenience:
+	/*
 	for (auto &transform : scene.transforms) {
 		if (transform.name == "Hip.FL") hip = &transform;
 		else if (transform.name == "UpperLeg.FL") upper_leg = &transform;
@@ -53,6 +53,7 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	hip_base_rotation = hip->rotation;
 	upper_leg_base_rotation = upper_leg->rotation;
 	lower_leg_base_rotation = lower_leg->rotation;
+	*/
 
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
@@ -73,38 +74,31 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			right.downs += 1;
 			right.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_w || evt.key.keysym.sym == SDLK_UP) {
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			up.downs += 1;
 			up.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_s || evt.key.keysym.sym == SDLK_DOWN) {
-			down.downs += 1;
-			down.pressed = true;
-			return true;
 		}
-	} else if (evt.type == SDL_KEYUP) {
+	}
+	else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a || evt.key.keysym.sym == SDLK_LEFT) {
 			left.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_d || evt.key.keysym.sym == SDLK_RIGHT) {
+		}
+		else if (evt.key.keysym.sym == SDLK_d || evt.key.keysym.sym == SDLK_RIGHT) {
 			right.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_w || evt.key.keysym.sym == SDLK_UP) {
+		}
+		else if (evt.key.keysym.sym == SDLK_SPACE) {
 			up.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_s || evt.key.keysym.sym == SDLK_DOWN) {
-			down.pressed = false;
-			return true;
 		}
+	}
 	return false;
 }
 
 void PlayMode::update(float elapsed) {
-	time_acc += elapsed;
-	while (time_acc > tick) {
-		for 
-	}
-
+	/*
 	//slowly rotates through [0,1):
 	wobble += elapsed / 10.0f;
 	wobble -= std::floor(wobble);
@@ -121,12 +115,7 @@ void PlayMode::update(float elapsed) {
 		glm::radians(10.0f * std::sin(wobble * 300.0f * 2.0f * float(M_PI))),
 		glm::vec3(0.0f, 0.0f, 1.0f)
 	);
-
-	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
-	up.downs = 0;
-	down.downs = 0;
+	*/
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
