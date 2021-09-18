@@ -22,10 +22,20 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up;
+	} left, right, up;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
+
+	//game state:
+	float score;
+	std::vector<Scene::Transform*> blocks;
+	const uint32_t num_tiles = 8;
+	const uint32_t len_tiles = 8;
+	const float rotation_speed = 0.1f;
+	float block_speed = 0.1f;
+	const float gravity = -0.1f;
+	float cat_speed;
 
 	//hexapod leg to wobble:
 	Scene::Transform *hip = nullptr;
