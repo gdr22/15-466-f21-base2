@@ -35,6 +35,7 @@ struct PlayMode : Mode {
 	const uint32_t num_tiles = 8; //tiles per ring
 	const uint32_t len_tiles = 8; //number of rings on screen at a time
 	const float rotation_speed = 10;
+	const float spawn_chance = 0.7f;
 	float block_speed = 0.1f;
 	const float gravity = -2.0f;
 	float cat_speed = 0.0f; //this is only cat's up and down speed;

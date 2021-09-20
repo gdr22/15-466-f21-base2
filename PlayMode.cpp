@@ -11,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>
+#include <time.h>
 
 GLuint catblob_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > catblob_meshes(LoadTagDefault, []() -> MeshBuffer const * {
@@ -83,6 +84,33 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
 	camera = &scene.cameras.front();
+
+	//spawn the tunnel
+	srand((unsigned)time(NULL));
+	for (uint32_t i = 0; i < len_tiles; ++i) {
+		for (uint32_t j = 0; j < num_tiles; ++j) {
+			float randnum = (float)rand() / RAND_MAX;
+			
+			if (randnum < 1.0f) {
+				std::cout << randnum << "\n";
+				Scene::Transform* tile = new Scene::Transform;
+				tile->position = grass->position;
+				tile->rotation = grass->rotation;
+				tile->scale = grass->scale;
+				tile->position.x -= 0.5f * (float)len_tiles;
+				tile->name = "Grass Copy";
+				//scene.transforms.push_back(tile);
+
+				Scene::Drawable drawable(tile);
+				drawable.pipeline = lit_color_texture_program_pipeline;
+				drawable.pipeline.vao = catblob_meshes_for_lit_color_texture_program;
+				drawable.pipeline.type = grass_vertex_type;
+				drawable.pipeline.start = grass_vertex_start;
+				drawable.pipeline.count = grass_vertex_count;
+				scene.drawables.push_back(drawable);
+			}
+		}
+	}
 }
 
 PlayMode::~PlayMode() {
@@ -120,6 +148,10 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 	}
 	return false;
+}
+
+void tunnel_update(float elapsed) {
+
 }
 
 void PlayMode::update(float elapsed) {
