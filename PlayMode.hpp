@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <deque>
+#include <array>
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -35,7 +36,7 @@ struct PlayMode : Mode {
 	const uint32_t len_tiles = 8; //number of rings on screen at a time
 	const float rotation_speed = 10;
 	float block_speed = 0.1f;
-	const float gravity = -0.1f;
+	const float gravity = -2.0f;
 	float cat_speed = 0.0f; //this is only cat's up and down speed;
 	bool grounded = true;
 	
@@ -48,6 +49,7 @@ struct PlayMode : Mode {
 	Scene::Transform* lear = nullptr;
 	Scene::Transform* rear = nullptr;
 	Scene::Transform* cattail = nullptr;
+	std::array<Scene::Transform*, 8> catTransforms;
 
 	//grass block info
 	Scene::Transform* grass = nullptr;

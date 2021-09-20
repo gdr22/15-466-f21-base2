@@ -77,6 +77,7 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 			throw std::runtime_error("Found unexpected object: " + drawable.transform->name);
 		}
 	}
+	catTransforms = { cat, lbpeet, lfpeet, rbpeet, rfpeet, lear, rear, cattail };
 	if (grass == nullptr) throw std::runtime_error("Grass object not found.");
 	
 	//get pointer to camera for convenience:
@@ -133,13 +134,19 @@ void PlayMode::update(float elapsed) {
 	//check if grounded aka collision with tile
 
 	if (up.pressed && grounded) {
-		cat_speed = 5; //sorry this is just a magic number rn
+		cat_speed = 5.0f; //sorry this is just a magic number rn
 		grounded = false; //perhaps we don't need this
 	}
-	cat_speed += gravity * elapsed;
+	if (grounded) {
+		cat_speed = 0.0f;
+	}
+	else {
+		cat_speed += gravity * elapsed;
+	}
 	//update cat position
-
-
+	for (Scene::Transform* t : catTransforms) {
+		t->position.z += (cat_speed * elapsed);
+	}
 
 	//keeping this code for reference on animation
 	/*
