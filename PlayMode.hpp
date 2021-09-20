@@ -31,20 +31,29 @@ struct PlayMode : Mode {
 	float score;
 	std::vector<Scene::Transform*> blocks;
 	std::vector<float> angles;
-	const uint32_t num_tiles = 8;
-	const uint32_t len_tiles = 8;
+	const uint32_t num_tiles = 8; //tiles per ring
+	const uint32_t len_tiles = 8; //number of rings on screen at a time
 	const float rotation_speed = 10;
 	float block_speed = 0.1f;
 	const float gravity = -0.1f;
-	float cat_speed;
+	float cat_speed = 0.0f; //this is only cat's up and down speed;
+	bool grounded = true;
 	
 	//cat transforms
 	Scene::Transform* cat = nullptr;
-	Scene::Transform* catpeet0 = nullptr;
-	Scene::Transform* catpeet1 = nullptr;
-	Scene::Transform* catpeet2 = nullptr;
-	Scene::Transform* catpeet3 = nullptr;
+	Scene::Transform* lbpeet = nullptr;
+	Scene::Transform* lfpeet = nullptr;
+	Scene::Transform* rbpeet = nullptr;
+	Scene::Transform* rfpeet = nullptr;
+	Scene::Transform* lear = nullptr;
+	Scene::Transform* rear = nullptr;
 	Scene::Transform* cattail = nullptr;
+
+	//grass block info
+	Scene::Transform* grass = nullptr;
+	GLenum grass_vertex_type = GL_TRIANGLES;
+	GLuint grass_vertex_start = 0;
+	GLuint grass_vertex_count = 0;
 
 	//hexapod leg to wobble:
 	Scene::Transform *hip = nullptr;

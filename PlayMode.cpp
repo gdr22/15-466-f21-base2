@@ -39,23 +39,46 @@ Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
 PlayMode::PlayMode() : scene(*catblob_scene) {
 	//init game states
 	score = 0;
-	//get pointers:
-	/*
-	for (auto &transform : scene.transforms) {
-		if (transform.name == "Hip.FL") hip = &transform;
-		else if (transform.name == "UpperLeg.FL") upper_leg = &transform;
-		else if (transform.name == "LowerLeg.FL") lower_leg = &transform;
-	}
-	if (hip == nullptr) throw std::runtime_error("Hip not found.");
-	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
-	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
-	*/
-	/*
-	hip_base_rotation = hip->rotation;
-	upper_leg_base_rotation = upper_leg->rotation;
-	lower_leg_base_rotation = lower_leg->rotation;
-	*/
 
+	//get pointers:
+	for (auto& drawable : scene.drawables) {
+		//sadness that switch doesnt work on string
+		if (drawable.transform->name == "Grass") {
+			grass = drawable.transform;
+			grass_vertex_type = drawable.pipeline.type;
+			grass_vertex_start = drawable.pipeline.start;
+			grass_vertex_count = drawable.pipeline.count;
+		} 
+		else if (drawable.transform->name == "Left Back Foot") {
+			lbpeet = drawable.transform;
+		}
+		else if (drawable.transform->name == "Left Ear") {
+			lear = drawable.transform;
+		}
+		else if (drawable.transform->name == "Left Front Foot") {
+			lfpeet = drawable.transform;
+		}
+		else if (drawable.transform->name == "Right Back Foot") {
+			rbpeet = drawable.transform;
+		}
+		else if (drawable.transform->name == "Right Ear") {
+			rear = drawable.transform;
+		}
+		else if (drawable.transform->name == "Right Front Foot") {
+			rfpeet = drawable.transform;
+		}
+		else if (drawable.transform->name == "Sphere") {
+			cat = drawable.transform;
+		}
+		else if (drawable.transform->name == "Tail") {
+			cattail = drawable.transform;
+		}
+		else {
+			throw std::runtime_error("Found unexpected object: " + drawable.transform->name);
+		}
+	}
+	if (grass == nullptr) throw std::runtime_error("Grass object not found.");
+	
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
 	camera = &scene.cameras.front();
@@ -99,6 +122,26 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
+	//rotate tunnel
+	if (left.pressed) {
+		//iterate through tiles and rotate transforms by rotation_speed * elapsed
+	}
+	else if (right.pressed) {
+		//same thing but other direction
+	}
+
+	//check if grounded aka collision with tile
+
+	if (up.pressed && grounded) {
+		cat_speed = 5; //sorry this is just a magic number rn
+		grounded = false; //perhaps we don't need this
+	}
+	cat_speed += gravity * elapsed;
+	//update cat position
+
+
+
+	//keeping this code for reference on animation
 	/*
 	//slowly rotates through [0,1):
 	wobble += elapsed / 10.0f;
@@ -153,12 +196,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		));
 
 		constexpr float H = 0.09f;
-		lines.draw_text("Arrows/WASD to rotate tunnel",
+		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Arrows/WASD to rotate tunnel",
+		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump",
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
