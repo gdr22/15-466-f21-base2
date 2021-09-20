@@ -39,7 +39,7 @@ Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
 PlayMode::PlayMode() : scene(*catblob_scene) {
 	//init game states
 	score = 0;
-	//get pointers to leg for convenience:
+	//get pointers:
 	/*
 	for (auto &transform : scene.transforms) {
 		if (transform.name == "Hip.FL") hip = &transform;
@@ -49,7 +49,8 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	if (hip == nullptr) throw std::runtime_error("Hip not found.");
 	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
 	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
-
+	*/
+	/*
 	hip_base_rotation = hip->rotation;
 	upper_leg_base_rotation = upper_leg->rotation;
 	lower_leg_base_rotation = lower_leg->rotation;
