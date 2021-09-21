@@ -84,22 +84,26 @@ bool PlayMode::spawn_tile() {
 		}
 	}
 
-	float angle_variance = block_speed * 5;
+	float angle_variance = spawn_angle_variance;
 	
 	if(max_depth < MAX_DEPTH) {
 		// Generate a new strip of tiles
 		uint32_t strip_size = (((unsigned)rand()) % 5);
 		strip_size += 3;
 
+		float randnum = (float)rand() / RAND_MAX;
+		float skew = (randnum * 2.f * spawn_skew_variance) - spawn_skew_variance;
+
 		max_depth += spawn_dist;
 
 		for(uint32_t i = 0; i < strip_size; i++) {
-			float randnum = (float)rand() / RAND_MAX;
-			spawn_angle += (2.f * angle_variance * randnum) - angle_variance;
+			randnum = (float)rand() / RAND_MAX;
+			spawn_angle += (2.f * angle_variance * randnum) - angle_variance + skew;
 			
 			new_block(spawn_angle, -max_depth);
 			max_depth += 5.0f;
 
+			// Fix the angle variance to be small within tiles in a strip
 			angle_variance = 5.0f;
 		}
 		return true;
@@ -175,7 +179,7 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	srand((unsigned)time(NULL) + 15466);
 
 	// Spawn tiles until we hit max depth
-	while(spawn_tile()) { }
+	while(spawn_tile()) { spawn_angle_variance = 60.f; }
 }
 
 PlayMode::~PlayMode() {
@@ -227,9 +231,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	return false;
 }
 
-void tunnel_update(float elapsed) {
-
-}
 
 void PlayMode::update(float elapsed) {
 	if (game_over) return;
@@ -311,6 +312,10 @@ void PlayMode::update(float elapsed) {
 
 	if(spawn_dist < 30.f) {
 		spawn_dist += elapsed;
+	}
+
+	if(spawn_angle_variance < 90.f) {
+		spawn_angle_variance += elapsed * 5;
 	}
 
 	// Recycle blocks

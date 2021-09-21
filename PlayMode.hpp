@@ -50,6 +50,8 @@ struct PlayMode : Mode {
 	
 	float spawn_dist = 5.0f;
 	float spawn_angle = 0.f;
+	float spawn_angle_variance = 5.f;
+	float spawn_skew_variance = 5.f;
 	float rotation = 0.f;
 
 	//cat transforms
