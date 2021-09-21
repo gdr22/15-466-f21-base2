@@ -7,6 +7,7 @@
 #include "Load.hpp"
 #include "gl_errors.hpp"
 #include "data_path.hpp"
+#include "Sound.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -35,6 +36,10 @@ Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
 		drawable.pipeline.count = mesh.count;
 
 	});
+});
+
+Load< Sound::Sample > bgmusic(LoadTagDefault, []() -> Sound::Sample const* {
+	return new Sound::Sample(data_path("bloodpixelhero__in-game.wav"));
 });
 
 PlayMode::Block PlayMode::new_block(float angle, float depth) {
@@ -155,10 +160,6 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 		}
 	}
 	catTransforms = { cat, lbpeet, lfpeet, rbpeet, rfpeet, lear, rear, cattail };
-	lfpeet_base = lfpeet->position;
-	lbpeet_base = lbpeet->position;
-	rfpeet_base = rfpeet->position;
-	rbpeet_base = rbpeet->position;
 
 	// Make all cat parts children of the cat body
 	for(Scene::Transform* transform : catTransforms) {
@@ -169,6 +170,10 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 			transform->parent = cat;
 		}
 	}
+	lfpeet_base = lfpeet->position;
+	lbpeet_base = lbpeet->position;
+	rfpeet_base = rfpeet->position;
+	rbpeet_base = rbpeet->position;
 
 	cat->position.y = 0;
 	cat->position.z = 3;
@@ -184,6 +189,33 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 
 	// Spawn tiles until we hit max depth
 	while(spawn_tile()) { spawn_angle_variance = 60.f; }
+
+	Sound::loop(*bgmusic, 0.5f, 1.0f);
+}
+
+void PlayMode::reset() {
+	score = 0;
+	game_over = false;
+
+	cat->position.y = 0;
+	cat->position.z = 3;
+	cat_speed = 0;
+	grounded = true;
+
+	spawn_dist = 5.0f;
+	spawn_angle = 0.f;
+	spawn_angle_variance = 5.f;
+	spawn_skew_variance = 5.f;
+	rotation = 0.f;
+	
+	// Recycle blocks
+	for (Block& block : blocks) {
+		block.alive = false;
+		block.depth = 0.f;
+	}
+
+	// Spawn tiles until we hit max depth
+	while (spawn_tile()) { spawn_angle_variance = 60.f; }
 }
 
 PlayMode::~PlayMode() {
@@ -216,6 +248,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			up.downs += 1;
 			up.pressed = true;
 			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_r) {
+			reset();
 		}
 	}
 	else if (evt.type == SDL_KEYUP) {
@@ -285,31 +320,54 @@ void PlayMode::update(float elapsed) {
 	if (cat->position.z < -15) {
 		game_over = true;
 	}
-	//keeping this code for reference on animation
+	
 	//slowly rotates through [0,1):
 	wobble += elapsed / 10.0f;
 	wobble -= std::floor(wobble);
-
-	lbpeet->position = lbpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
-	);
-	lfpeet->position = lfpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
-	);
-	rbpeet->position = rbpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
-	);
-	rfpeet->position = rfpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
-	);
+	if (!grounded) {
+		lbpeet->position = lbpeet_base + glm::vec3(
+			-0.15f * std::sin((wobble + 5.0f) * 10.0f * 2.0f * float(M_PI)),
+			-0.15f * std::sin((wobble + 5.0f) * 10.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+		lfpeet->position = lfpeet_base + glm::vec3(
+			-0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f,//0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+		rbpeet->position = rbpeet_base + glm::vec3(
+			0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			-0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+		rfpeet->position = rfpeet_base + glm::vec3(
+			0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f, //0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+	}
+	else{
+		lbpeet->position = lbpeet_base + glm::vec3(
+			-0.05f * std::sin((wobble + 5.0f) * 40.0f * 2.0f * float(M_PI)),
+			-0.05f * std::sin((wobble + 5.0f) * 40.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+		lfpeet->position = lfpeet_base + glm::vec3(
+			-0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
+			0.0f,//0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+		rbpeet->position = rbpeet_base + glm::vec3(
+			0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
+			-0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+		rfpeet->position = rfpeet_base + glm::vec3(
+			0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
+			0.0f, //0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
+			0.0f
+		);
+	}
 
 	for(Block &block : blocks) {
 		if(!block.alive) continue;
@@ -377,7 +435,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		));
 
 		constexpr float H = 0.09f;
-		constexpr float bigH = 0.6f;
+		constexpr float bigH = 0.8f;
+		constexpr float medH = 0.5f;
 		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
@@ -405,6 +464,14 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			lines.draw_text("Score: " + std::to_string((int)score),
 				glm::vec3(-aspect + 0.1f * bigH + ofs, 1.0f - 1.1f * bigH + ofs, 0.0),
 				glm::vec3(bigH, 0.0f, 0.0f), glm::vec3(0.0f, bigH, 0.0f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+			lines.draw_text("Press R to restart",
+				glm::vec3(-aspect + 0.1f * medH, -1.0f + 0.1f * medH, 0.0),
+				glm::vec3(medH, 0.0f, 0.0f), glm::vec3(0.0f, medH, 0.0f),
+				glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			lines.draw_text("Press R to restart",
+				glm::vec3(-aspect + 0.1f * medH + ofs, -1.0f + 0.1f * medH + ofs, 0.0),
+				glm::vec3(medH, 0.0f, 0.0f), glm::vec3(0.0f, medH, 0.0f),
 				glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 	}

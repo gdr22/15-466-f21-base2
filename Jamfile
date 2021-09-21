@@ -133,6 +133,8 @@ COMMON_NAMES =
 	Mode
 	GL
 	Load
+	Sound
+	load_wav
 	;
 
 SHOW_MESHES_NAMES =

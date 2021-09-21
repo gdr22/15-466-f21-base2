@@ -1,6 +1,7 @@
 #include "Mode.hpp"
 
 #include "Scene.hpp"
+#include "Sound.hpp"
 
 #include <glm/glm.hpp>
 
@@ -38,12 +39,7 @@ struct PlayMode : Mode {
 	//game state:
 	float score;
 	float game_over = false;
-	//std::vector<Scene::Transform*> blocks;
-	std::vector<float> angles;
-	const uint32_t num_tiles = 16; //tiles per ring
-	const uint32_t len_tiles = 8; //number of rings on screen at a time
 	const float rotation_speed = 90;
-	const float spawn_chance = 0.7f;
 	float block_speed = 10.f;
 	const float gravity = -30.0f;
 	float cat_speed = 0.0f; //this is only cat's up and down speed;
@@ -98,6 +94,7 @@ struct PlayMode : Mode {
 
 	Block new_block(float angle, float depth);
 	bool spawn_tile();
+	void reset();
 
 	std::vector<Block> blocks;
 	
