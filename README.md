@@ -1,4 +1,4 @@
-# (TODO: your game's title)
+# Cat Run
 
 Author: Anne He and George Ralph
 
