@@ -155,6 +155,10 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 		}
 	}
 	catTransforms = { cat, lbpeet, lfpeet, rbpeet, rfpeet, lear, rear, cattail };
+	lfpeet_base = lfpeet->position;
+	lbpeet_base = lbpeet->position;
+	rfpeet_base = rfpeet->position;
+	rbpeet_base = rbpeet->position;
 
 	// Make all cat parts children of the cat body
 	for(Scene::Transform* transform : catTransforms) {
@@ -282,24 +286,30 @@ void PlayMode::update(float elapsed) {
 		game_over = true;
 	}
 	//keeping this code for reference on animation
-	/*
 	//slowly rotates through [0,1):
 	wobble += elapsed / 10.0f;
 	wobble -= std::floor(wobble);
 
-	hip->rotation = hip_base_rotation * glm::angleAxis(
-		glm::radians(5.0f * std::sin(wobble * 200.0f * float(M_PI))),
-		glm::vec3(0.0f, 1.0f, 0.0f)
+	lbpeet->position = lbpeet_base + glm::vec3(
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f
 	);
-	upper_leg->rotation = upper_leg_base_rotation * glm::angleAxis(
-		glm::radians(7.0f * std::sin(wobble * 200.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
+	lfpeet->position = lfpeet_base + glm::vec3(
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f
 	);
-	lower_leg->rotation = lower_leg_base_rotation * glm::angleAxis(
-		glm::radians(10.0f * std::sin(wobble * 300.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
+	rbpeet->position = rbpeet_base + glm::vec3(
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f
 	);
-	*/
+	rfpeet->position = rfpeet_base + glm::vec3(
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f
+	);
 
 	for(Block &block : blocks) {
 		if(!block.alive) continue;
@@ -308,7 +318,7 @@ void PlayMode::update(float elapsed) {
 		block.update_pos(rotation);
 	}
 
-	block_speed += elapsed;
+	block_speed += elapsed * 0.1f;
 
 	if(spawn_dist < 30.f) {
 		spawn_dist += elapsed;

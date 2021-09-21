@@ -66,6 +66,12 @@ struct PlayMode : Mode {
 	Scene::Transform* cattail = nullptr;
 	std::array<Scene::Transform*, 8> catTransforms;
 
+	glm::vec3 lfpeet_base;
+	glm::vec3 lbpeet_base;
+	glm::vec3 rbpeet_base;
+	glm::vec3 rfpeet_base;
+	float wobble = 0.0f;
+
 	//grass block info
 	Scene::Transform grass;
 	GLenum grass_vertex_type = GL_TRIANGLES;
@@ -94,15 +100,6 @@ struct PlayMode : Mode {
 	bool spawn_tile();
 
 	std::vector<Block> blocks;
-
-	//hexapod leg to wobble:
-	Scene::Transform *hip = nullptr;
-	Scene::Transform *upper_leg = nullptr;
-	Scene::Transform *lower_leg = nullptr;
-	glm::quat hip_base_rotation;
-	glm::quat upper_leg_base_rotation;
-	glm::quat lower_leg_base_rotation;
-	float wobble = 0.0f;
 	
 	//camera:
 	Scene::Camera *camera = nullptr;
