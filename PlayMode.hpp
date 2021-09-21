@@ -7,6 +7,7 @@
 #include <vector>
 #include <deque>
 #include <array>
+#include <cmath>
 
 #define PI_F 3.14159265f
 #define DEG2RAD 3.14159265f / 180.f
@@ -35,6 +36,7 @@ struct PlayMode : Mode {
 
 	//game state:
 	float score;
+	float game_over = false;
 	//std::vector<Scene::Transform*> blocks;
 	std::vector<float> angles;
 	const uint32_t num_tiles = 16; //tiles per ring
@@ -42,7 +44,7 @@ struct PlayMode : Mode {
 	const float rotation_speed = 90;
 	const float spawn_chance = 0.7f;
 	float block_speed = 10.f;
-	const float gravity = -20.0f;
+	const float gravity = -30.0f;
 	float cat_speed = 0.0f; //this is only cat's up and down speed;
 	bool grounded = true;
 	
@@ -62,7 +64,7 @@ struct PlayMode : Mode {
 	std::array<Scene::Transform*, 8> catTransforms;
 
 	//grass block info
-	Scene::Transform* grass = nullptr;
+	Scene::Transform grass;
 	GLenum grass_vertex_type = GL_TRIANGLES;
 	GLuint grass_vertex_start = 0;
 	GLuint grass_vertex_count = 0;
