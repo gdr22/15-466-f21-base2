@@ -7,7 +7,7 @@
 #include <vector>
 #include <deque>
 #include <array>
-#include <math.h>
+#include <cmath>
 
 #define PI_F 3.14159265f
 #define DEG2RAD 3.14159265f / 180.f
