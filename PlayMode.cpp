@@ -107,6 +107,20 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 		}
 	}
 	catTransforms = { cat, lbpeet, lfpeet, rbpeet, rfpeet, lear, rear, cattail };
+
+	// Make all cat parts children of the cat body
+	for(Scene::Transform* transform : catTransforms) {
+		if(transform != cat) {
+			transform->position = (cat->make_world_to_local()) * glm::vec4(transform->position.x, transform->position.y, transform->position.z, 1.0f);
+			// We should be inverting the parent rotation here. Not sure how to though
+			//transform->rotation = (cat->rotation ) * transform->rotation;
+			transform->parent = cat;
+		}
+	}
+
+	cat->position.y = 0;
+	cat->position.z = 3;
+
 	if (grass == nullptr) throw std::runtime_error("Grass object not found.");
 	
 	//get pointer to camera for convenience:
@@ -115,14 +129,14 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 
 	//spawn the tunnel
 	srand((unsigned)time(NULL));
-	for (uint32_t i = 0; i < len_tiles; ++i) {
+	for (uint32_t i = 0; i < len_tiles * 10; ++i) {
 		for (uint32_t j = 0; j < num_tiles; ++j) {
 			float randnum = (float)rand() / RAND_MAX;
 			
-			if (randnum < 0.5f) {
+			if (randnum < 0.9f) {
 				//std::cout << randnum << "\n";
 				float angle  = 360.f * (float)j / num_tiles;
-				float depth = (-5.0f * (float)len_tiles) * i;
+				float depth = (-0.5f * (float)len_tiles) * i;
 				new_block(angle, depth);
 			}
 		}
@@ -130,6 +144,18 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 }
 
 PlayMode::~PlayMode() {
+}
+
+float norm_angle(float angle) {
+	float a = angle;
+
+	while (a < -180.f || a > 180.f)
+	{
+		a += a < -180.f ? 360.f : 0.f;
+		a -= a >  180.f ? 360.f : 0.f;
+	}
+
+	return a;
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
@@ -182,9 +208,21 @@ void PlayMode::update(float elapsed) {
 	}
 
 	//check if grounded aka collision with tile
+	grounded = false;
+//
+	
+	for(Block &block : blocks) {
+		if(abs(block.depth) < 2.f) {
+			if(abs(norm_angle(block.angle + rotation)) < 15.f) {
+				if(cat->position.z <= 3) {
+					grounded = true;
+				}
+			}
+		}
+	}
 
 	if (up.pressed && grounded) {
-		cat_speed = 5.0f; //sorry this is just a magic number rn
+		cat_speed = 15.0f; //sorry this is just a magic number rn
 		grounded = false; //perhaps we don't need this
 	}
 	if (grounded) {
@@ -194,9 +232,9 @@ void PlayMode::update(float elapsed) {
 		cat_speed += gravity * elapsed;
 	}
 	//update cat position
-	for (Scene::Transform* t : catTransforms) {
-		t->position.z += (cat_speed * elapsed);
-	}
+	//for (Scene::Transform* t : catTransforms) {
+	cat->position.z += (cat_speed * elapsed);
+	//}
 
 	//keeping this code for reference on animation
 	/*
