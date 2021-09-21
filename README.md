@@ -10,7 +10,7 @@ Screen Shot:
 
 How To Play:
 
-Use arrows or A/D to rotate the tiles. Press space to jump. Press W and S to speed up and slow
+Use arrows or A/D to rotate the tiles. Press space to jump. Hold Up/W or Down/S to speed up and slow
 down.
 
 Sources: Assets created by us. 
