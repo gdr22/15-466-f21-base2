@@ -8,6 +8,7 @@
 #include <deque>
 #include <array>
 #include <cmath>
+#include <math.h>
 
 #define PI_F 3.14159265f
 #define DEG2RAD 3.14159265f / 180.f
@@ -81,8 +82,8 @@ struct PlayMode : Mode {
 			float world_angle = angle + rotation;
 			tile->rotation = glm::angleAxis(world_angle * DEG2RAD, glm::vec3(0.f, 1.f, 0.f));
 			
-			tile->position.x =  RADIUS * -std::sinf(world_angle * DEG2RAD);
-			tile->position.z =  RADIUS * -std::cosf(world_angle * DEG2RAD);
+			tile->position.x =  RADIUS * -sinf(world_angle * DEG2RAD);
+			tile->position.z =  RADIUS * -cosf(world_angle * DEG2RAD);
 			tile->position.z += RADIUS;
 			tile->position.y = depth;
 		}
