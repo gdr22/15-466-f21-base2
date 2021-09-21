@@ -44,9 +44,9 @@ PlayMode::Block PlayMode::new_block(float angle, float depth) {
 	block.depth = depth;
 	block.tile = new Scene::Transform;
 
-	block.tile->position = grass->position;
-	block.tile->rotation = grass->rotation;
-	block.tile->scale    = grass->scale;
+	block.tile->position = grass.position;
+	block.tile->rotation = grass.rotation;
+	block.tile->scale    = grass.scale;
 
 	block.tile->name = "Grass Copy";
 	//scene.transforms.push_back(tile);
@@ -73,10 +73,11 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	for (auto& drawable : scene.drawables) {
 		//sadness that switch doesnt work on string
 		if (drawable.transform->name == "Grass") {
-			grass = drawable.transform;
+			grass = *drawable.transform;
 			grass_vertex_type = drawable.pipeline.type;
 			grass_vertex_start = drawable.pipeline.start;
 			grass_vertex_count = drawable.pipeline.count;
+			drawable.transform->scale = glm::vec3(0.0f, 0.0f, 0.0f);
 		} 
 		else if (drawable.transform->name == "Left Back Foot") {
 			lbpeet = drawable.transform;
@@ -121,7 +122,7 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	cat->position.y = 0;
 	cat->position.z = 3;
 
-	if (grass == nullptr) throw std::runtime_error("Grass object not found.");
+	//if (grass.name != "Grass") throw std::runtime_error("Grass object not found.");
 	
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
@@ -132,8 +133,7 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	for (uint32_t i = 0; i < len_tiles * 10; ++i) {
 		for (uint32_t j = 0; j < num_tiles; ++j) {
 			float randnum = (float)rand() / RAND_MAX;
-			
-			if (randnum < 0.9f) {
+			if (randnum < 0.6f || (i ==0 && j == 0)) {
 				//std::cout << randnum << "\n";
 				float angle  = 360.f * (float)j / num_tiles;
 				float depth = (-0.5f * (float)len_tiles) * i;
@@ -197,6 +197,10 @@ void tunnel_update(float elapsed) {
 }
 
 void PlayMode::update(float elapsed) {
+	if (game_over) return;
+
+	score += elapsed;
+
 	//rotate tunnel
 	if (left.pressed) {
 		//iterate through tiles and rotate transforms by rotation_speed * elapsed
@@ -214,7 +218,7 @@ void PlayMode::update(float elapsed) {
 	for(Block &block : blocks) {
 		if(abs(block.depth) < 2.f) {
 			if(abs(norm_angle(block.angle + rotation)) < 15.f) {
-				if(cat->position.z <= 3) {
+				if(cat->position.z <= 2.85 && cat->position.z >= 2) {
 					grounded = true;
 				}
 			}
@@ -235,7 +239,10 @@ void PlayMode::update(float elapsed) {
 	//for (Scene::Transform* t : catTransforms) {
 	cat->position.z += (cat_speed * elapsed);
 	//}
-
+	
+	if (cat->position.z < -15) {
+		game_over = true;
+	}
 	//keeping this code for reference on animation
 	/*
 	//slowly rotates through [0,1):
@@ -276,7 +283,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
 	glUseProgram(0);
 
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	glClearColor(0.71f, 0.95f, 1.0f, 1.0f);
 	glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -298,6 +305,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		));
 
 		constexpr float H = 0.09f;
+		constexpr float bigH = 0.6f;
 		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
@@ -307,5 +315,25 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		if (!game_over) {
+			lines.draw_text("Score: " + std::to_string((int)score),
+				glm::vec3(-aspect + 0.1f * H, 1.0f - 1.1f * H, 0.0),
+				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			lines.draw_text("Score: " + std::to_string((int)score),
+				glm::vec3(-aspect + 0.1f * H + ofs, 1.0f - 1.1f * H + ofs, 0.0),
+				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
+		else {
+			lines.draw_text("Score: " + std::to_string((int)score),
+				glm::vec3(-aspect + 0.1f * bigH, 1.0f - 1.1f * bigH, 0.0),
+				glm::vec3(bigH, 0.0f, 0.0f), glm::vec3(0.0f, bigH, 0.0f),
+				glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			lines.draw_text("Score: " + std::to_string((int)score),
+				glm::vec3(-aspect + 0.1f * bigH + ofs, 1.0f - 1.1f * bigH + ofs, 0.0),
+				glm::vec3(bigH, 0.0f, 0.0f), glm::vec3(0.0f, bigH, 0.0f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
 	}
 }
