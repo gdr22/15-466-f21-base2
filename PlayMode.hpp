@@ -8,6 +8,10 @@
 #include <deque>
 #include <array>
 
+#define PI_F 3.14159265f
+#define DEG2RAD 3.14159265f / 180.f
+#define RADIUS 12
+
 struct PlayMode : Mode {
 	PlayMode();
 	virtual ~PlayMode();
@@ -30,17 +34,19 @@ struct PlayMode : Mode {
 
 	//game state:
 	float score;
-	std::vector<Scene::Transform*> blocks;
+	//std::vector<Scene::Transform*> blocks;
 	std::vector<float> angles;
 	const uint32_t num_tiles = 8; //tiles per ring
 	const uint32_t len_tiles = 8; //number of rings on screen at a time
-	const float rotation_speed = 10;
+	const float rotation_speed = 90;
 	const float spawn_chance = 0.7f;
-	float block_speed = 0.1f;
+	float block_speed = 5.f;
 	const float gravity = -2.0f;
 	float cat_speed = 0.0f; //this is only cat's up and down speed;
 	bool grounded = true;
 	
+	float rotation = 0.f;
+
 	//cat transforms
 	Scene::Transform* cat = nullptr;
 	Scene::Transform* lbpeet = nullptr;
@@ -57,6 +63,27 @@ struct PlayMode : Mode {
 	GLenum grass_vertex_type = GL_TRIANGLES;
 	GLuint grass_vertex_start = 0;
 	GLuint grass_vertex_count = 0;
+
+	typedef struct Block {
+		Scene::Transform* tile;
+		float angle;
+		float depth;
+
+		void update_pos(float rotation) {
+			float world_angle = angle + rotation;
+			tile->rotation = glm::angleAxis(world_angle * DEG2RAD, glm::vec3(0.f, 1.f, 0.f));
+			
+			tile->position.x =  RADIUS * -std::sinf(world_angle * DEG2RAD);
+			tile->position.z =  RADIUS * -std::cosf(world_angle * DEG2RAD);
+			tile->position.z += RADIUS;
+			tile->position.y = depth;
+		}
+
+	} Block;
+
+	Block new_block(float angle, float depth);
+
+	std::vector<Block> blocks;
 
 	//hexapod leg to wobble:
 	Scene::Transform *hip = nullptr;

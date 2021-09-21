@@ -37,6 +37,34 @@ Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
 	});
 });
 
+PlayMode::Block PlayMode::new_block(float angle, float depth) {
+	Block block;
+
+	block.angle = angle;
+	block.depth = depth;
+	block.tile = new Scene::Transform;
+
+	block.tile->position = grass->position;
+	block.tile->rotation = grass->rotation;
+	block.tile->scale    = grass->scale;
+
+	block.tile->name = "Grass Copy";
+	//scene.transforms.push_back(tile);
+
+	Scene::Drawable drawable(block.tile);
+	drawable.pipeline = lit_color_texture_program_pipeline;
+	drawable.pipeline.vao = catblob_meshes_for_lit_color_texture_program;
+	drawable.pipeline.type = grass_vertex_type;
+	drawable.pipeline.start = grass_vertex_start;
+	drawable.pipeline.count = grass_vertex_count;
+	PlayMode::scene.drawables.push_back(drawable);
+
+	
+	block.update_pos(rotation);
+	blocks.emplace_back(block);
+	return block;
+}
+
 PlayMode::PlayMode() : scene(*catblob_scene) {
 	//init game states
 	score = 0;
@@ -91,23 +119,11 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 		for (uint32_t j = 0; j < num_tiles; ++j) {
 			float randnum = (float)rand() / RAND_MAX;
 			
-			if (randnum < 1.0f) {
-				std::cout << randnum << "\n";
-				Scene::Transform* tile = new Scene::Transform;
-				tile->position = grass->position;
-				tile->rotation = grass->rotation;
-				tile->scale = grass->scale;
-				tile->position.x -= 0.5f * (float)len_tiles;
-				tile->name = "Grass Copy";
-				//scene.transforms.push_back(tile);
-
-				Scene::Drawable drawable(tile);
-				drawable.pipeline = lit_color_texture_program_pipeline;
-				drawable.pipeline.vao = catblob_meshes_for_lit_color_texture_program;
-				drawable.pipeline.type = grass_vertex_type;
-				drawable.pipeline.start = grass_vertex_start;
-				drawable.pipeline.count = grass_vertex_count;
-				scene.drawables.push_back(drawable);
+			if (randnum < 0.5f) {
+				//std::cout << randnum << "\n";
+				float angle  = 360.f * (float)j / num_tiles;
+				float depth = (-5.0f * (float)len_tiles) * i;
+				new_block(angle, depth);
 			}
 		}
 	}
@@ -158,9 +174,11 @@ void PlayMode::update(float elapsed) {
 	//rotate tunnel
 	if (left.pressed) {
 		//iterate through tiles and rotate transforms by rotation_speed * elapsed
+		rotation += rotation_speed * elapsed;
 	}
 	else if (right.pressed) {
 		//same thing but other direction
+		rotation -= rotation_speed * elapsed;
 	}
 
 	//check if grounded aka collision with tile
@@ -199,6 +217,13 @@ void PlayMode::update(float elapsed) {
 		glm::vec3(0.0f, 0.0f, 1.0f)
 	);
 	*/
+
+	for(Block &block : blocks) {
+		block.depth += elapsed * block_speed;
+		block.update_pos(rotation);
+	}
+
+	block_speed += elapsed;
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
