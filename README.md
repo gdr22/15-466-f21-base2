@@ -10,7 +10,8 @@ Screen Shot:
 
 How To Play:
 
-Use arrows or A/D to rotate the tiles. Press space to jump.
+Use arrows or A/D to rotate the tiles. Press space to jump. Press W and S to speed up and slow
+down.
 
 Sources: Assets created by us. Tile spawning referenced from https://github.com/lassyla/game2.
 
