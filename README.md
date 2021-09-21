@@ -11,7 +11,7 @@ Screen Shot:
 How To Play:
 
 Use arrows or A/D to rotate the tiles. Press space to jump. Hold Up/W or Down/S to speed up and slow
-down. Changing time is powerful but also tricky. The speed of the game increases as you progress.
+down. Press R to restart. Changing time is powerful but also tricky. The speed of the game increases as you progress.
 
 Sources: Assets created by us. 
 Referenced 15-466 F21 Game 2 base code.
