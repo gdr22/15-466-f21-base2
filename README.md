@@ -1,4 +1,4 @@
-# (TODO: your game's title)
+# Cat Run
 
 Author: Anne He and George Ralph
 
@@ -10,7 +10,8 @@ Screen Shot:
 
 How To Play:
 
-Use arrows or A/D to rotate the tiles. Press space to jump.
+Use arrows or A/D to rotate the tiles. Press space to jump. Press W and S to speed up and slow
+down.
 
 Sources: Assets created by us. 
 Referenced 15-466 F21 Game 2 base code.

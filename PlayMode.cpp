@@ -99,6 +99,8 @@ bool PlayMode::spawn_tile() {
 		float randnum = (float)rand() / RAND_MAX;
 		float skew = (randnum * 2.f * spawn_skew_variance) - spawn_skew_variance;
 
+		//printf("%f\n", spawn_dist);
+
 		max_depth += spawn_dist;
 
 		for(uint32_t i = 0; i < strip_size; i++) {
@@ -175,6 +177,12 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	rfpeet_base = rfpeet->position;
 	rbpeet_base = rbpeet->position;
 
+	lfpeet_base = lfpeet->position;
+	lbpeet_base = lbpeet->position;
+	rfpeet_base = rfpeet->position;
+	rbpeet_base = rbpeet->position;
+	tail_base = cattail->rotation;
+
 	cat->position.y = 0;
 	cat->position.z = 3;
 
@@ -202,6 +210,7 @@ void PlayMode::reset() {
 	cat_speed = 0;
 	grounded = true;
 
+	block_speed = 10.f;
 	spawn_dist = 5.0f;
 	spawn_angle = 0.f;
 	spawn_angle_variance = 5.f;
@@ -244,6 +253,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			right.downs += 1;
 			right.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_s || evt.key.keysym.sym == SDLK_DOWN) {
+			slow.downs += 1;
+			slow.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_w || evt.key.keysym.sym == SDLK_UP) {
+			fast.downs += 1;
+			fast.pressed = true;
+			return true;
 		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			up.downs += 1;
 			up.pressed = true;
@@ -260,6 +277,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 		else if (evt.key.keysym.sym == SDLK_d || evt.key.keysym.sym == SDLK_RIGHT) {
 			right.pressed = false;
+			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_s || evt.key.keysym.sym == SDLK_DOWN) {
+			slow.pressed = false;
+			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_w || evt.key.keysym.sym == SDLK_UP) {
+			fast.pressed = false;
 			return true;
 		}
 		else if (evt.key.keysym.sym == SDLK_SPACE) {
@@ -316,14 +341,17 @@ void PlayMode::update(float elapsed) {
 	//for (Scene::Transform* t : catTransforms) {
 	cat->position.z += (cat_speed * elapsed);
 	//}
+
+	float speed = slow.pressed ? 0.5f : (fast.pressed ? 1.7f : 1.f);
 	
 	if (cat->position.z < -15) {
 		game_over = true;
 	}
 	
 	//slowly rotates through [0,1):
-	wobble += elapsed / 10.0f;
+	wobble += elapsed * speed / 10.0f;
 	wobble -= std::floor(wobble);
+
 	if (!grounded) {
 		lbpeet->position = lbpeet_base + glm::vec3(
 			-0.15f * std::sin((wobble + 5.0f) * 10.0f * 2.0f * float(M_PI)),
@@ -348,41 +376,34 @@ void PlayMode::update(float elapsed) {
 	}
 	else{
 		lbpeet->position = lbpeet_base + glm::vec3(
-			-0.05f * std::sin((wobble + 5.0f) * 40.0f * 2.0f * float(M_PI)),
-			-0.05f * std::sin((wobble + 5.0f) * 40.0f * 2.0f * float(M_PI)),
-			0.0f
-		);
-		lfpeet->position = lfpeet_base + glm::vec3(
-			-0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
-			0.0f,//0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
-			0.0f
+		0.0f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f,
+	   -0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI))
 		);
 		rbpeet->position = rbpeet_base + glm::vec3(
-			0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
-			-0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
-			0.0f
-		);
-		rfpeet->position = rfpeet_base + glm::vec3(
-			0.05f * std::sin(wobble * 40.0f * 2.0f * float(M_PI)),
-			0.0f, //0.15f * std::sin(wobble * 10.0f * 2.0f * float(M_PI)),
-			0.0f
+		0.0f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f,
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI))
 		);
 	}
+
+	float tail_angle  = 20.f * std::sin(wobble * 10.0f * 2.0f * float(M_PI));
+	cattail->rotation = tail_base * glm::angleAxis(tail_angle * DEG2RAD, glm::vec3(0.f, 1.f, 0.f));
 
 	for(Block &block : blocks) {
 		if(!block.alive) continue;
 
-		block.depth += elapsed * block_speed;
+		block.depth += elapsed * block_speed * speed;
 		block.update_pos(rotation);
 	}
 
-	block_speed += elapsed * 0.1f;
+	block_speed += elapsed;
 
 	if(spawn_dist < 30.f) {
 		spawn_dist += elapsed;
 	}
 
-	if(spawn_angle_variance < 90.f) {
+	if(spawn_angle_variance < 60.f) {
 		spawn_angle_variance += elapsed * 5;
 	}
 
@@ -390,10 +411,6 @@ void PlayMode::update(float elapsed) {
 	for(Block &block : blocks) {
 		if(block.depth > 20.0f) {
 			block.alive = false;
-			//blocks.erase(blocks.begin() + i);
-			//i--;
-
-			//new_block(block.angle, -500.f);
 		}
 	}
 	
@@ -437,12 +454,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		constexpr float H = 0.09f;
 		constexpr float bigH = 0.8f;
 		constexpr float medH = 0.5f;
-		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump",
+		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump, Hold Up/W or Down/S to speed or slow down",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump",
+		lines.draw_text("Arrows/A+D to rotate tunnel, Space to jump, Hold Up/W or Down/S to speed or slow down",
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
