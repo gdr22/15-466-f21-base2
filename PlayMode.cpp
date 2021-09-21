@@ -38,6 +38,17 @@ Load< Scene > catblob_scene(LoadTagDefault, []() -> Scene const * {
 });
 
 PlayMode::Block PlayMode::new_block(float angle, float depth) {
+	// Look for any dead blocks we can reuse
+	for(Block &block : blocks) {
+		if(!block.alive) {
+			block.angle = angle;
+			block.depth = depth;
+			block.alive = true;
+			block.update_pos(rotation);
+			return block;
+		}
+	}
+	
 	Block block;
 
 	block.angle = angle;
@@ -63,6 +74,38 @@ PlayMode::Block PlayMode::new_block(float angle, float depth) {
 	block.update_pos(rotation);
 	blocks.emplace_back(block);
 	return block;
+}
+
+bool PlayMode::spawn_tile() {
+	float max_depth = 0.f;
+	for(Block &block : blocks) {
+		if(max_depth < -block.depth) {
+			max_depth = -block.depth;
+		}
+	}
+
+	float angle_variance = block_speed * 5;
+	
+	if(max_depth < MAX_DEPTH) {
+		// Generate a new strip of tiles
+		uint32_t strip_size = (((unsigned)rand()) % 5);
+		strip_size += 3;
+
+		max_depth += spawn_dist;
+
+		for(uint32_t i = 0; i < strip_size; i++) {
+			float randnum = (float)rand() / RAND_MAX;
+			spawn_angle += (2.f * angle_variance * randnum) - angle_variance;
+			
+			new_block(spawn_angle, -max_depth);
+			max_depth += 5.0f;
+
+			angle_variance = 5.0f;
+		}
+		return true;
+	}
+	
+	return false;
 }
 
 PlayMode::PlayMode() : scene(*catblob_scene) {
@@ -128,19 +171,23 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 	camera = &scene.cameras.front();
 
 	//spawn the tunnel
-	srand((unsigned)time(NULL));
-	for (uint32_t i = 0; i < len_tiles * 10; ++i) {
-		for (uint32_t j = 0; j < num_tiles; ++j) {
-			float randnum = (float)rand() / RAND_MAX;
-			
-			if (randnum < 0.9f) {
-				//std::cout << randnum << "\n";
-				float angle  = 360.f * (float)j / num_tiles;
-				float depth = (-0.5f * (float)len_tiles) * i;
-				new_block(angle, depth);
-			}
-		}
-	}
+	srand((unsigned)time(NULL) + 15466);
+
+	// Spawn tiles until we hit max depth
+	while(spawn_tile()) { }
+
+	//for (uint32_t i = 0; i < len_tiles * 10; ++i) {
+	//	for (uint32_t j = 0; j < num_tiles; ++j) {
+	//		float randnum = (float)rand() / RAND_MAX;
+	//		
+	//		if (randnum < 0.2f) {
+	//			//std::cout << randnum << "\n";
+	//			float angle  = 360.f * (float)j / num_tiles;
+	//			float depth = (-0.5f * (float)len_tiles) * i;
+	//			new_block(angle, depth);
+	//		}
+	//	}
+	//}
 }
 
 PlayMode::~PlayMode() {
@@ -212,7 +259,9 @@ void PlayMode::update(float elapsed) {
 //
 	
 	for(Block &block : blocks) {
-		if(abs(block.depth) < 2.f) {
+		if(!block.alive) continue;
+
+		if(abs(block.depth) < 5.f) {
 			if(abs(norm_angle(block.angle + rotation)) < 15.f) {
 				if(cat->position.z <= 3) {
 					grounded = true;
@@ -257,11 +306,31 @@ void PlayMode::update(float elapsed) {
 	*/
 
 	for(Block &block : blocks) {
+		if(!block.alive) continue;
+
 		block.depth += elapsed * block_speed;
 		block.update_pos(rotation);
 	}
 
 	block_speed += elapsed;
+
+	if(spawn_dist < 30.f) {
+		spawn_dist += elapsed;
+	}
+
+	// Recycle blocks
+	for(Block &block : blocks) {
+		if(block.depth > 20.0f) {
+			block.alive = false;
+			//blocks.erase(blocks.begin() + i);
+			//i--;
+
+			//new_block(block.angle, -500.f);
+		}
+	}
+	
+	// Spawn tiles until we hit max depth
+	while(spawn_tile()) { }
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {

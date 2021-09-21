@@ -11,6 +11,7 @@
 #define PI_F 3.14159265f
 #define DEG2RAD 3.14159265f / 180.f
 #define RADIUS 12
+#define MAX_DEPTH 200.f
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -40,11 +41,13 @@ struct PlayMode : Mode {
 	const uint32_t len_tiles = 8; //number of rings on screen at a time
 	const float rotation_speed = 90;
 	const float spawn_chance = 0.7f;
-	float block_speed = 5.f;
+	float block_speed = 10.f;
 	const float gravity = -20.0f;
 	float cat_speed = 0.0f; //this is only cat's up and down speed;
 	bool grounded = true;
 	
+	float spawn_dist = 5.0f;
+	float spawn_angle = 0.f;
 	float rotation = 0.f;
 
 	//cat transforms
@@ -68,6 +71,7 @@ struct PlayMode : Mode {
 		Scene::Transform* tile;
 		float angle;
 		float depth;
+		bool alive;
 
 		void update_pos(float rotation) {
 			float world_angle = angle + rotation;
@@ -82,6 +86,7 @@ struct PlayMode : Mode {
 	} Block;
 
 	Block new_block(float angle, float depth);
+	bool spawn_tile();
 
 	std::vector<Block> blocks;
 
