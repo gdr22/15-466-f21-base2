@@ -13,7 +13,7 @@
 #define PI_F 3.14159265f
 #define DEG2RAD 3.14159265f / 180.f
 #define RADIUS 12
-#define MAX_DEPTH 200.f
+#define MAX_DEPTH 500.f
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -30,7 +30,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, up;
+	} left, right, up, slow, fast;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -70,6 +70,7 @@ struct PlayMode : Mode {
 	glm::vec3 lbpeet_base;
 	glm::vec3 rbpeet_base;
 	glm::vec3 rfpeet_base;
+	glm::quat tail_base;
 	float wobble = 0.0f;
 
 	//grass block info

@@ -94,6 +94,8 @@ bool PlayMode::spawn_tile() {
 		float randnum = (float)rand() / RAND_MAX;
 		float skew = (randnum * 2.f * spawn_skew_variance) - spawn_skew_variance;
 
+		printf("%f\n", spawn_dist);
+
 		max_depth += spawn_dist;
 
 		for(uint32_t i = 0; i < strip_size; i++) {
@@ -155,10 +157,6 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 		}
 	}
 	catTransforms = { cat, lbpeet, lfpeet, rbpeet, rfpeet, lear, rear, cattail };
-	lfpeet_base = lfpeet->position;
-	lbpeet_base = lbpeet->position;
-	rfpeet_base = rfpeet->position;
-	rbpeet_base = rbpeet->position;
 
 	// Make all cat parts children of the cat body
 	for(Scene::Transform* transform : catTransforms) {
@@ -169,6 +167,12 @@ PlayMode::PlayMode() : scene(*catblob_scene) {
 			transform->parent = cat;
 		}
 	}
+
+	lfpeet_base = lfpeet->position;
+	lbpeet_base = lbpeet->position;
+	rfpeet_base = rfpeet->position;
+	rbpeet_base = rbpeet->position;
+	tail_base = cattail->rotation;
 
 	cat->position.y = 0;
 	cat->position.z = 3;
@@ -212,6 +216,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			right.downs += 1;
 			right.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_s || evt.key.keysym.sym == SDLK_DOWN) {
+			slow.downs += 1;
+			slow.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_w || evt.key.keysym.sym == SDLK_UP) {
+			fast.downs += 1;
+			fast.pressed = true;
+			return true;
 		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			up.downs += 1;
 			up.pressed = true;
@@ -225,6 +237,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 		else if (evt.key.keysym.sym == SDLK_d || evt.key.keysym.sym == SDLK_RIGHT) {
 			right.pressed = false;
+			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_s || evt.key.keysym.sym == SDLK_DOWN) {
+			slow.pressed = false;
+			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_w || evt.key.keysym.sym == SDLK_UP) {
+			fast.pressed = false;
 			return true;
 		}
 		else if (evt.key.keysym.sym == SDLK_SPACE) {
@@ -281,50 +301,44 @@ void PlayMode::update(float elapsed) {
 	//for (Scene::Transform* t : catTransforms) {
 	cat->position.z += (cat_speed * elapsed);
 	//}
+
+	float speed = slow.pressed ? 0.5f : (fast.pressed ? 1.7f : 1.f);
 	
 	if (cat->position.z < -15) {
 		game_over = true;
 	}
 	//keeping this code for reference on animation
 	//slowly rotates through [0,1):
-	wobble += elapsed / 10.0f;
+	wobble += elapsed * speed / 10.0f;
 	wobble -= std::floor(wobble);
 
 	lbpeet->position = lbpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
-	);
-	lfpeet->position = lfpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
+		0.0f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f,
+	   -0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI))
 	);
 	rbpeet->position = rbpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
+		0.0f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
+		0.0f,
+		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI))
 	);
-	rfpeet->position = rfpeet_base + glm::vec3(
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.5f * std::sin(wobble * 20.0f * 2.0f * float(M_PI)),
-		0.0f
-	);
+	float tail_angle  = 20.f * std::sin(wobble * 10.0f * 2.0f * float(M_PI));
+	cattail->rotation = tail_base * glm::angleAxis(tail_angle * DEG2RAD, glm::vec3(0.f, 1.f, 0.f));
 
 	for(Block &block : blocks) {
 		if(!block.alive) continue;
 
-		block.depth += elapsed * block_speed;
+		block.depth += elapsed * block_speed * speed;
 		block.update_pos(rotation);
 	}
 
-	block_speed += elapsed * 0.1f;
+	block_speed += elapsed;
 
 	if(spawn_dist < 30.f) {
 		spawn_dist += elapsed;
 	}
 
-	if(spawn_angle_variance < 90.f) {
+	if(spawn_angle_variance < 60.f) {
 		spawn_angle_variance += elapsed * 5;
 	}
 
@@ -332,10 +346,6 @@ void PlayMode::update(float elapsed) {
 	for(Block &block : blocks) {
 		if(block.depth > 20.0f) {
 			block.alive = false;
-			//blocks.erase(blocks.begin() + i);
-			//i--;
-
-			//new_block(block.angle, -500.f);
 		}
 	}
 	
